@@ -33,6 +33,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
@@ -40,6 +45,19 @@ export const metadata: Metadata = {
     title: 'Escala | Conectando médicos a oportunidades de plantão',
     description: 'Encontre plantões médicos disponíveis de forma simples e rápida. Sem burocracia, sem contratos.',
     siteName: 'Escala',
+    images: [{
+      url: '/logo.png',
+      width: 800,
+      height: 600,
+      alt: 'Logo Escala'
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Escala | Conectando médicos a oportunidades de plantão',
+    description: 'Encontre plantões médicos disponíveis de forma simples e rápida. Sem burocracia, sem contratos.',
+    images: ['/logo.png'],
+    creator: '@escala',
   },
 };
 
