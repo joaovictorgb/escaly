@@ -1,0 +1,5 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M40.5 20C40.5 31.0457 31.5457 40 20.5 40C9.45431 40 0.5 31.0457 0.5 20C0.5 8.95431 9.45431 0 20.5 0C31.5457 0 40.5 8.95431 40.5 20Z" fill="#4263EB"/>
+  <path d="M55.5 11H117.5V29H55.5V11Z" fill="white"/>
+  <text x="60" y="25" font-family="Arial" font-size="18" font-weight="bold" fill="#111827">Escala</text>
+</svg> 
