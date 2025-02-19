@@ -7,6 +7,8 @@ export interface User {
   crm?: string;
   phone: string;
   avatar?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Hospital {
@@ -29,4 +31,13 @@ export interface Shift {
   specialty: string;
   status: 'open' | 'assigned' | 'completed' | 'cancelled';
   paymentValue: number;
+}
+
+export interface Candidature {
+  userId: string
+  shiftId: string
+  userName: string
+  userCrm?: string
+  status: 'pending' | 'approved' | 'rejected'
+  createdAt: string
 } 
