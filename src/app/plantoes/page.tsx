@@ -13,13 +13,20 @@ import {
   BuildingOffice2Icon,
   AcademicCapIcon,
   ChevronDownIcon,
-  HeartIcon
+  HeartIcon,
+  AdjustmentsHorizontalIcon,
+  ArrowsUpDownIcon,
+  StarIcon,
+  UserGroupIcon,
+  BuildingOfficeIcon,
+  CheckBadgeIcon
 } from '@heroicons/react/24/outline'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
-import { Dialog, Transition } from '@headlessui/react'
+import { Dialog, Transition, Menu } from '@headlessui/react'
 import { Fragment } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface Shift {
   id: string
@@ -50,6 +57,37 @@ const PRICE_RANGES = [
   { value: '200+', label: 'R$ 200+/h' }
 ] as const
 
+const SORT_OPTIONS = [
+  { value: 'recent', label: 'Mais recentes' },
+  { value: 'price-asc', label: 'Menor preço' },
+  { value: 'price-desc', label: 'Maior preço' },
+  { value: 'rating', label: 'Melhor avaliação' }
+] as const
+
+const FEATURED_HOSPITALS = [
+  {
+    id: 1,
+    name: 'Hospital Albert Einstein',
+    image: '/hospitals/einstein.jpg',
+    rating: 4.9,
+    shifts: 15
+  },
+  {
+    id: 2,
+    name: 'Hospital Sírio-Libanês',
+    image: '/hospitals/sirio.jpg',
+    rating: 4.8,
+    shifts: 12
+  },
+  {
+    id: 3,
+    name: 'Hospital São Luiz',
+    image: '/hospitals/sao-luiz.jpg',
+    rating: 4.7,
+    shifts: 8
+  }
+]
+
 export default function Shifts() {
   const { user } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
@@ -59,6 +97,9 @@ export default function Shifts() {
   const [isHovered, setIsHovered] = useState<string | null>(null)
   const [selectedCity, setSelectedCity] = useState('')
   const [selectedValue, setSelectedValue] = useState('')
+  const [sortBy, setSortBy] = useState<typeof SORT_OPTIONS[number]['value']>('recent')
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [favoriteShifts, setFavoriteShifts] = useState<string[]>([])
 
   // Dados mockados com tipagem correta
   const shifts: Shift[] = useMemo(() => [
@@ -116,6 +157,27 @@ export default function Shifts() {
     })
   }, [shifts, searchTerm, selectedSpecialty, selectedCity, selectedValue])
 
+  const sortedAndFilteredShifts = useMemo(() => {
+    let result = filteredShifts
+
+    switch (sortBy) {
+      case 'price-asc':
+        result = [...result].sort((a, b) => a.price - b.price)
+        break
+      case 'price-desc':
+        result = [...result].sort((a, b) => b.price - a.price)
+        break
+      case 'rating':
+        result = [...result].sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+      default:
+        // Mantém a ordem original (mais recentes)
+        break
+    }
+
+    return result
+  }, [filteredShifts, sortBy])
+
   const handleApply = useCallback(async (shift: Shift) => {
     if (!user) {
       setSelectedShift(shift)
@@ -130,9 +192,28 @@ export default function Shifts() {
     setSearchTerm(e.target.value)
   }, [])
 
+  const toggleFavorite = useCallback((shiftId: string) => {
+    if (!user) {
+      setIsLoginModalOpen(true)
+      return
+    }
+
+    setFavoriteShifts(prev => 
+      prev.includes(shiftId) 
+        ? prev.filter(id => id !== shiftId)
+        : [...prev, shiftId]
+    )
+    
+    toast.success(
+      favoriteShifts.includes(shiftId) 
+        ? 'Plantão removido dos favoritos'
+        : 'Plantão adicionado aos favoritos'
+    )
+  }, [user, favoriteShifts])
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
+      {/* Hero Section com Estatísticas */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 pt-24 pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold text-white mb-6">
@@ -143,7 +224,38 @@ export default function Shifts() {
             Encontre oportunidades que se encaixam na sua agenda.
           </p>
 
-          {/* Search Bar */}
+          {/* Estatísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6">
+              <div className="flex items-center gap-4">
+                <BuildingOfficeIcon className="h-8 w-8 text-blue-200" />
+                <div>
+                  <p className="text-2xl font-bold text-white">150+</p>
+                  <p className="text-blue-200">Hospitais Parceiros</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6">
+              <div className="flex items-center gap-4">
+                <UserGroupIcon className="h-8 w-8 text-blue-200" />
+                <div>
+                  <p className="text-2xl font-bold text-white">2.500+</p>
+                  <p className="text-blue-200">Médicos Ativos</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6">
+              <div className="flex items-center gap-4">
+                <CheckBadgeIcon className="h-8 w-8 text-blue-200" />
+                <div>
+                  <p className="text-2xl font-bold text-white">10.000+</p>
+                  <p className="text-blue-200">Plantões Realizados</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Barra de Busca Melhorada */}
           <div className="bg-white p-4 rounded-2xl shadow-lg flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -192,26 +304,94 @@ export default function Shifts() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 pb-12">
-        {/* Filters */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {SPECIALTIES.map((specialty) => (
-            <button
-              key={specialty}
-              onClick={() => setSelectedSpecialty(specialty as Specialty)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
-                (specialty === 'Todas' && selectedSpecialty === 'Todas') || selectedSpecialty === specialty
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-500'
-              }`}
-            >
-              {specialty}
-            </button>
-          ))}
+        {/* Hospitais em Destaque */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Hospitais em Destaque</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {FEATURED_HOSPITALS.map((hospital) => (
+              <div key={hospital.id} className="group relative overflow-hidden rounded-lg">
+                <div className="aspect-w-16 aspect-h-9 relative">
+                  <Image
+                    src={hospital.image}
+                    alt={hospital.name}
+                    layout="fill"
+                    objectFit="cover"
+                    className="group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <h3 className="font-semibold">{hospital.name}</h3>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center">
+                      <StarIcon className="h-4 w-4 text-yellow-400" />
+                      <span className="ml-1 text-sm">{hospital.rating}</span>
+                    </div>
+                    <span className="text-sm">{hospital.shifts} plantões</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Results */}
+        {/* Filtros e Ordenação */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {SPECIALTIES.map((specialty) => (
+              <button
+                key={specialty}
+                onClick={() => setSelectedSpecialty(specialty as Specialty)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
+                  (specialty === 'Todas' && selectedSpecialty === 'Todas') || selectedSpecialty === specialty
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-500'
+                }`}
+              >
+                {specialty}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Menu as="div" className="relative">
+              <Menu.Button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+                <ArrowsUpDownIcon className="h-5 w-5" />
+                Ordenar por
+              </Menu.Button>
+              <Menu.Items className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 focus:outline-none">
+                {SORT_OPTIONS.map((option) => (
+                  <Menu.Item key={option.value}>
+                    {({ active }) => (
+                      <button
+                        onClick={() => setSortBy(option.value)}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } ${
+                          sortBy === option.value ? 'text-blue-600' : 'text-gray-700'
+                        } group flex w-full items-center px-4 py-2 text-sm`}
+                      >
+                        {option.label}
+                      </button>
+                    )}
+                  </Menu.Item>
+                ))}
+              </Menu.Items>
+            </Menu>
+
+            <button
+              onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              <AdjustmentsHorizontalIcon className="h-5 w-5" />
+              Filtros
+            </button>
+          </div>
+        </div>
+
+        {/* Lista de Plantões */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredShifts.map((shift) => (
+          {sortedAndFilteredShifts.map((shift) => (
             <div
               key={shift.id}
               className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-300 ${
@@ -232,8 +412,17 @@ export default function Shifts() {
                       <p className="text-sm text-gray-600">{shift.specialty}</p>
                     </div>
                   </div>
-                  <button className="text-gray-400 hover:text-red-500 transition-colors">
-                    <HeartIcon className="h-6 w-6" />
+                  <button 
+                    onClick={() => toggleFavorite(shift.id)}
+                    className={`transition-colors ${
+                      favoriteShifts.includes(shift.id) 
+                        ? 'text-red-500' 
+                        : 'text-gray-400 hover:text-red-500'
+                    }`}
+                  >
+                    <HeartIcon className={`h-6 w-6 ${
+                      favoriteShifts.includes(shift.id) ? 'fill-current' : ''
+                    }`} />
                   </button>
                 </div>
 
@@ -257,14 +446,14 @@ export default function Shifts() {
                     <span className="text-sm font-medium text-gray-900">{shift.rating}</span>
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
-                        <svg
+                        <StarIcon
                           key={i}
-                          className={`w-4 h-4 ${i < Math.floor(shift.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
+                          className={`w-4 h-4 ${
+                            i < Math.floor(shift.rating || 0) 
+                              ? 'text-yellow-400 fill-current' 
+                              : 'text-gray-300'
+                          }`}
+                        />
                       ))}
                     </div>
                     <span className="text-sm text-gray-500">({shift.reviews})</span>
